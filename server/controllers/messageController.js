@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Message from "../models/Message.js";
 import { sendContactNotification } from "../services/mailer.js";
+import { sendContactSmsNotification } from "../services/smsNotifier.js";
 
 const sanitize = (value = "") => value.toString().trim();
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -14,7 +15,7 @@ const storeFallbackMessage = (payload) => {
   fallbackInbox.push({
     id: fallbackId,
     ...payload,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
   });
 
   return fallbackId;
@@ -26,20 +27,26 @@ export const createMessage = async (req, res) => {
   const message = sanitize(req.body?.message);
 
   if (!name || !email || !message) {
-    return res.status(400).json({ message: "Name, email, and message are required." });
+    return res
+      .status(400)
+      .json({ message: "Name, email, and message are required." });
   }
 
   if (!emailPattern.test(email)) {
-    return res.status(400).json({ message: "Please enter a valid email address." });
+    return res
+      .status(400)
+      .json({ message: "Please enter a valid email address." });
   }
 
   if (message.length < 10) {
-    return res.status(400).json({ message: "Message must be at least 10 characters." });
+    return res
+      .status(400)
+      .json({ message: "Message must be at least 10 characters." });
   }
 
   if (message.length > maxMessageLength) {
     return res.status(400).json({
-      message: `Message must be at most ${maxMessageLength} characters.`
+      message: `Message must be at most ${maxMessageLength} characters.`,
     });
   }
 
@@ -50,50 +57,88 @@ export const createMessage = async (req, res) => {
     let responseMessage = "Message sent successfully.";
     let messageId = "";
     let storage = "database";
+    const notifications = {
+      email: "pending",
+      sms: "pending",
+    };
 
     if (mongoose.connection.readyState !== 1) {
       messageId = storeFallbackMessage(payload);
       storage = "fallback";
       responseStatus = 202;
-      responseMessage = "Message received. Configure MongoDB to store messages permanently.";
-      console.warn("Contact message stored in fallback mode: MongoDB is not connected.");
+      responseMessage =
+        "Message received. Configure MongoDB to store messages permanently.";
+      console.warn(
+        "Contact message stored in fallback mode: MongoDB is not connected.",
+      );
     } else {
       try {
         const savedMessage = await Message.create(payload);
         messageId = savedMessage._id;
       } catch (dbError) {
         if (dbError?.name === "ValidationError") {
-          return res.status(400).json({ message: "Message payload is invalid." });
+          return res
+            .status(400)
+            .json({ message: "Message payload is invalid." });
         }
 
         messageId = storeFallbackMessage(payload);
         storage = "fallback";
         responseStatus = 202;
-        responseMessage = "Message received. Configure MongoDB to store messages permanently.";
-        console.warn("Contact message stored in fallback mode:", dbError.message);
+        responseMessage =
+          "Message received. Configure MongoDB to store messages permanently.";
+        console.warn(
+          "Contact message stored in fallback mode:",
+          dbError.message,
+        );
       }
     }
 
     try {
       const emailResult = await sendContactNotification(payload);
+      notifications.email = emailResult.sent
+        ? "sent"
+        : emailResult.reason || "skipped";
 
       if (!emailResult.sent && emailResult.reason === "not-configured") {
-        console.warn("SMTP is not configured. Skipping email notification for contact message.");
+        console.warn(
+          "SMTP is not configured. Skipping email notification for contact message.",
+        );
       }
     } catch (emailError) {
-      console.error("Failed to send contact notification email:", emailError.message);
+      notifications.email = "failed";
+      console.error(
+        "Failed to send contact notification email:",
+        emailError.message,
+      );
+    }
+
+    try {
+      const smsResult = await sendContactSmsNotification(payload);
+      notifications.sms = smsResult.sent
+        ? "sent"
+        : smsResult.reason || "skipped";
+
+      if (!smsResult.sent && smsResult.reason === "not-configured") {
+        console.warn(
+          "SMS is not configured. Skipping mobile notification for contact message.",
+        );
+      }
+    } catch (smsError) {
+      notifications.sms = "failed";
+      console.error("Failed to send SMS notification:", smsError.message);
     }
 
     return res.status(responseStatus).json({
       message: responseMessage,
       id: messageId,
-      storage
+      storage,
+      notifications,
     });
   } catch (error) {
     return res.status(500).json({
       message: "Unable to send message right now.",
-      error: error.message
+      error: error.message,
     });
   }
 };
-

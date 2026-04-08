@@ -3,13 +3,14 @@ import { jsPDF } from "jspdf";
 import { fetchPortfolio } from "./api/portfolioApi";
 import { sendMessage } from "./api/messageApi";
 
-const isHttpLink = (value) => typeof value === "string" && /^https?:\/\//i.test(value);
+const isHttpLink = (value) =>
+  typeof value === "string" && /^https?:\/\//i.test(value);
 const THEME_STORAGE_KEY = "portfolio-theme";
 const UPDATED_LINKEDIN_URL = "https://www.linkedin.com/in/deepakyadav045/";
 const BODMAS_BEAT_LIVE_URL = "https://bodmasbeat.netlify.app/";
 const LEGACY_LINKEDIN_URLS = new Set([
   "https://www.linkedin.com/in/deepak-yadav-dev",
-  "https://linkedin.com/in/deepak-yadav-dev"
+  "https://linkedin.com/in/deepak-yadav-dev",
 ]);
 
 const normalizeLinkedinUrl = (value) => {
@@ -32,7 +33,7 @@ const normalizeLinkedinUrl = (value) => {
 
 const normalizeSocialLinks = (social = {}) => ({
   ...social,
-  linkedin: normalizeLinkedinUrl(social.linkedin)
+  linkedin: normalizeLinkedinUrl(social.linkedin),
 });
 
 const normalizeProjectLinks = (projects = []) => {
@@ -45,9 +46,15 @@ const normalizeProjectLinks = (projects = []) => {
       return project;
     }
 
-    const normalizedTitle = typeof project.title === "string" ? project.title.trim().toLowerCase() : "";
-    const normalizedRepoUrl = typeof project.repoUrl === "string" ? project.repoUrl.toLowerCase() : "";
-    const isBodmasProject = normalizedTitle === "bodmas beat" || normalizedRepoUrl.includes("bodmas_beat");
+    const normalizedTitle =
+      typeof project.title === "string"
+        ? project.title.trim().toLowerCase()
+        : "";
+    const normalizedRepoUrl =
+      typeof project.repoUrl === "string" ? project.repoUrl.toLowerCase() : "";
+    const isBodmasProject =
+      normalizedTitle === "bodmas beat" ||
+      normalizedRepoUrl.includes("bodmas_beat");
 
     if (!isBodmasProject || isHttpLink(project.liveUrl)) {
       return project;
@@ -55,7 +62,7 @@ const normalizeProjectLinks = (projects = []) => {
 
     return {
       ...project,
-      liveUrl: BODMAS_BEAT_LIVE_URL
+      liveUrl: BODMAS_BEAT_LIVE_URL,
     };
   });
 };
@@ -77,7 +84,12 @@ const downloadResumePdf = (portfolio, projects) => {
     }
   };
 
-  const writeText = (text, size = 11, weight = "normal", color = [31, 43, 43]) => {
+  const writeText = (
+    text,
+    size = 11,
+    weight = "normal",
+    color = [31, 43, 43],
+  ) => {
     if (!text) {
       return;
     }
@@ -107,28 +119,41 @@ const downloadResumePdf = (portfolio, projects) => {
   const safePhone = (portfolio.phone || "").trim();
   const safeLocation = (portfolio.location || "").trim();
   const safeWebsite = isHttpLink(portfolio.website) ? portfolio.website : "";
-  const safeGithub = isHttpLink(portfolio.social?.github) ? portfolio.social.github : "";
+  const safeGithub = isHttpLink(portfolio.social?.github)
+    ? portfolio.social.github
+    : "";
   const safeLinkedin = isHttpLink(portfolio.social?.linkedin)
     ? normalizeLinkedinUrl(portfolio.social.linkedin)
     : UPDATED_LINKEDIN_URL;
   const safeAbout = (portfolio.about || portfolio.headline || "").trim();
-  const safeSkills = Array.isArray(portfolio.skills) ? portfolio.skills.filter(Boolean).join(", ") : "";
+  const safeSkills = Array.isArray(portfolio.skills)
+    ? portfolio.skills.filter(Boolean).join(", ")
+    : "";
 
   writeText(safeName, 24, "bold", [22, 36, 34]);
   writeText(safeRole, 13, "normal", [63, 87, 82]);
   y += 4;
 
-  const contactLine = [safeEmail, safePhone, safeLocation].filter(Boolean).join(" | ");
+  const contactLine = [safeEmail, safePhone, safeLocation]
+    .filter(Boolean)
+    .join(" | ");
   writeText(contactLine, 10, "normal", [64, 76, 78]);
 
-  const profileLinks = [safeWebsite, safeGithub, safeLinkedin].filter(Boolean).join(" | ");
+  const profileLinks = [safeWebsite, safeGithub, safeLinkedin]
+    .filter(Boolean)
+    .join(" | ");
   writeText(profileLinks, 10, "normal", [64, 76, 78]);
 
   addSection("Summary");
   writeText(safeAbout, 11, "normal", [31, 43, 43]);
 
   addSection("Skills");
-  writeText(safeSkills || "MERN, React, Node.js, Express, MongoDB", 11, "normal", [31, 43, 43]);
+  writeText(
+    safeSkills || "MERN, React, Node.js, Express, MongoDB",
+    11,
+    "normal",
+    [31, 43, 43],
+  );
 
   addSection("Projects");
   const safeProjects = Array.isArray(projects) ? projects.filter(Boolean) : [];
@@ -146,7 +171,7 @@ const downloadResumePdf = (portfolio, projects) => {
 
       const projectLinks = [
         isHttpLink(project.liveUrl) ? `Live: ${project.liveUrl}` : "",
-        isHttpLink(project.repoUrl) ? `Code: ${project.repoUrl}` : ""
+        isHttpLink(project.repoUrl) ? `Code: ${project.repoUrl}` : "",
       ]
         .filter(Boolean)
         .join(" | ");
@@ -159,7 +184,11 @@ const downloadResumePdf = (portfolio, projects) => {
     });
   }
 
-  const fileNameSlug = safeName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "resume";
+  const fileNameSlug =
+    safeName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "resume";
   doc.save(`${fileNameSlug}-resume.pdf`);
 };
 
@@ -208,7 +237,9 @@ const getInitialTheme = () => {
     return storedTheme;
   }
 
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light";
 };
 
 const getRepoLabel = (repoUrl) => {
@@ -236,7 +267,7 @@ const formatUpdatedAt = (value) => {
   return parsedDate.toLocaleDateString("en-IN", {
     year: "numeric",
     month: "short",
-    day: "numeric"
+    day: "numeric",
   });
 };
 
@@ -245,20 +276,20 @@ const navLinks = [
   { id: "about", label: "About" },
   { id: "skills", label: "Skills" },
   { id: "projects", label: "Projects" },
-  { id: "contact", label: "Contact" }
+  { id: "contact", label: "Contact" },
 ];
 
 const gitWorkItems = [
   "Version control with Git and GitHub",
   "Feature branching and clean pull requests",
-  "Repository maintenance with regular updates"
+  "Repository maintenance with regular updates",
 ];
 
 const gitGraphData = [
   { label: "Branching", value: 92 },
   { label: "Pull Requests", value: 88 },
   { label: "Repo Updates", value: 84 },
-  { label: "Issue Tracking", value: 76 }
+  { label: "Issue Tracking", value: 76 },
 ];
 
 const fallbackPortfolio = {
@@ -283,12 +314,12 @@ const fallbackPortfolio = {
     "GitHub",
     "Git Workflow",
     "Pull Requests",
-    "Deployment"
+    "Deployment",
   ],
   social: {
     github: "https://github.com/yadavdeep123",
     linkedin: "https://www.linkedin.com/in/deepakyadav045/",
-    twitter: "https://x.com/deepakyadavdev"
+    twitter: "https://x.com/deepakyadavdev",
   },
   projects: [
     {
@@ -297,11 +328,12 @@ const fallbackPortfolio = {
         "Product management app for dairy inventory workflows with a clean dashboard-style interface.",
       stack: ["JavaScript", "HTML", "CSS"],
       liveUrl: "https://dairy-product-management-systen-cx3.vercel.app/login",
-      repoUrl: "https://github.com/yadavdeep123/Dairy-Product-management-Systen",
+      repoUrl:
+        "https://github.com/yadavdeep123/Dairy-Product-management-Systen",
       language: "JavaScript",
       stars: 0,
       updatedAt: "2026-04-04T18:47:55Z",
-      badge: "Featured"
+      badge: "Featured",
     },
     {
       title: "Bodmas Beat",
@@ -313,7 +345,7 @@ const fallbackPortfolio = {
       language: "HTML",
       stars: 0,
       updatedAt: "2026-03-24T16:16:21Z",
-      badge: "Open Source"
+      badge: "Open Source",
     },
     {
       title: "APP",
@@ -325,9 +357,9 @@ const fallbackPortfolio = {
       language: "Dart",
       stars: 0,
       updatedAt: "2026-03-19T04:37:50Z",
-      badge: "Mobile"
-    }
-  ]
+      badge: "Mobile",
+    },
+  ],
 };
 
 function App() {
@@ -338,7 +370,7 @@ function App() {
   const [contactForm, setContactForm] = useState({
     name: "",
     email: "",
-    message: ""
+    message: "",
   });
   const [messageStatus, setMessageStatus] = useState("idle");
   const [messageFeedback, setMessageFeedback] = useState("");
@@ -349,7 +381,8 @@ function App() {
     ? `${normalizedSocial.github.replace(/\/+$/, "")}.png`
     : "";
 
-  const profileImage = portfolio.profileImage || githubAvatar || "/profile-photo.svg";
+  const profileImage =
+    portfolio.profileImage || githubAvatar || "/profile-photo.svg";
   const primaryEmail = portfolio.email || "yadavdeepak6959@gmail.com";
   const primaryPhone = portfolio.phone || "8709583627";
   const primaryLocation = portfolio.location || "Bihar, India";
@@ -359,12 +392,16 @@ function App() {
 
   const socialLinks = [
     { key: "github", label: "GitHub", toneClass: "social-platform-github" },
-    { key: "linkedin", label: "LinkedIn", toneClass: "social-platform-linkedin" },
-    { key: "twitter", label: "X", toneClass: "social-platform-twitter" }
+    {
+      key: "linkedin",
+      label: "LinkedIn",
+      toneClass: "social-platform-linkedin",
+    },
+    { key: "twitter", label: "X", toneClass: "social-platform-twitter" },
   ]
     .map((link) => ({
       ...link,
-      href: normalizedSocial[link.key]
+      href: normalizedSocial[link.key],
     }))
     .filter(({ href }) => isHttpLink(href));
 
@@ -372,12 +409,13 @@ function App() {
     const loadPortfolio = async () => {
       try {
         const data = await fetchPortfolio();
-        const nextPortfolio = data && typeof data === "object" ? data : fallbackPortfolio;
+        const nextPortfolio =
+          data && typeof data === "object" ? data : fallbackPortfolio;
 
         setPortfolio({
           ...nextPortfolio,
           social: normalizeSocialLinks(nextPortfolio.social),
-          projects: normalizeProjectLinks(nextPortfolio.projects)
+          projects: normalizeProjectLinks(nextPortfolio.projects),
         });
         setStatus("ready");
       } catch (error) {
@@ -406,7 +444,7 @@ function App() {
 
     setContactForm((prevForm) => ({
       ...prevForm,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -428,7 +466,10 @@ function App() {
       setContactForm({ name: "", email: "", message: "" });
     } catch (error) {
       setMessageStatus("error");
-      setMessageFeedback(error.response?.data?.message || "Could not send message. Please try again.");
+      setMessageFeedback(
+        error.response?.data?.message ||
+          "Could not send message. Please try again.",
+      );
     }
   };
 
@@ -436,9 +477,9 @@ function App() {
     downloadResumePdf(
       {
         ...portfolio,
-        social: normalizedSocial
+        social: normalizedSocial,
       },
-      normalizedProjects
+      normalizedProjects,
     );
   };
 
@@ -447,7 +488,10 @@ function App() {
       <div className="light-orb light-orb-one" aria-hidden="true" />
       <div className="light-orb light-orb-two" aria-hidden="true" />
 
-      <nav className="top-nav card reveal nav-reveal" aria-label="Page navigation">
+      <nav
+        className="top-nav card reveal nav-reveal"
+        aria-label="Page navigation"
+      >
         <a className="brand-mark" href="#home">
           {portfolio.name?.split(" ")?.[0] || "Portfolio"}
         </a>
@@ -476,11 +520,20 @@ function App() {
               <a className="btn btn-outline" href={resumeUrl} download>
                 Download Resume File
               </a>
-              <button type="button" className="btn btn-outline" onClick={handleDownloadResumePdf}>
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={handleDownloadResumePdf}
+              >
                 Download Resume PDF
               </button>
               {isHttpLink(normalizedSocial.github) && (
-                <a className="btn btn-outline" href={normalizedSocial.github} target="_blank" rel="noreferrer">
+                <a
+                  className="btn btn-outline"
+                  href={normalizedSocial.github}
+                  target="_blank"
+                  rel="noreferrer"
+                >
                   GitHub
                 </a>
               )}
@@ -494,9 +547,13 @@ function App() {
               </button>
             </div>
 
-            {status === "loading" && <p className="status">Loading portfolio data...</p>}
+            {status === "loading" && (
+              <p className="status">Loading portfolio data...</p>
+            )}
             {status === "offline" && (
-              <p className="status">API is unavailable, showing local fallback content.</p>
+              <p className="status">
+                API is unavailable, showing local fallback content.
+              </p>
             )}
           </div>
 
@@ -538,7 +595,10 @@ function App() {
 
         <section id="skills" className="card reveal delay-2">
           <h3>Tech Stack, Git Work &amp; Graph</h3>
-          <p className="skills-sub">I use Git daily for branch-based development, pull requests, and clean code history.</p>
+          <p className="skills-sub">
+            I use Git daily for branch-based development, pull requests, and
+            clean code history.
+          </p>
           <div className="skills-wrap">
             {portfolio.skills?.map((skill) => (
               <span className="chip" key={skill}>
@@ -560,7 +620,10 @@ function App() {
               <div className="git-bar-row" key={item.label}>
                 <span className="git-bar-label">{item.label}</span>
                 <div className="git-bar-track">
-                  <span className="git-bar-fill" style={{ width: `${item.value}%` }}>
+                  <span
+                    className="git-bar-fill"
+                    style={{ width: `${item.value}%` }}
+                  >
                     <span className="git-bar-value">{item.value}%</span>
                   </span>
                 </div>
@@ -574,11 +637,17 @@ function App() {
             <div>
               <h3>Featured Projects</h3>
               <p className="projects-sub">
-                A focused set of three builds with practical Git workflow and clean implementation.
+                A focused set of three builds with practical Git workflow and
+                clean implementation.
               </p>
             </div>
             {isHttpLink(normalizedSocial.github) && (
-              <a className="btn btn-outline projects-cta" href={normalizedSocial.github} target="_blank" rel="noreferrer">
+              <a
+                className="btn btn-outline projects-cta"
+                href={normalizedSocial.github}
+                target="_blank"
+                rel="noreferrer"
+              >
                 View All Repos
               </a>
             )}
@@ -587,19 +656,37 @@ function App() {
           <div className="projects-grid">
             {normalizedProjects.length ? (
               normalizedProjects.map((project, index) => (
-                <article className={`project project-v2 project-tone-${(index % 3) + 1}`} key={project.repoUrl || project.title}>
+                <article
+                  className={`project project-v2 project-tone-${(index % 3) + 1}`}
+                  key={project.repoUrl || project.title}
+                >
                   <div className="project-top">
-                    <span className="project-order">{String(index + 1).padStart(2, "0")}</span>
-                    <span className="project-badge">{project.badge || "Open Source"}</span>
+                    <span className="project-order">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <span className="project-badge">
+                      {project.badge || "Open Source"}
+                    </span>
                     <div className="project-stats">
-                      {typeof project.stars === "number" && <span className="project-stat">{`★ ${project.stars}`}</span>}
-                      {project.language && <span className="project-stat">{project.language}</span>}
+                      {typeof project.stars === "number" && (
+                        <span className="project-stat">{`★ ${project.stars}`}</span>
+                      )}
+                      {project.language && (
+                        <span className="project-stat">{project.language}</span>
+                      )}
                     </div>
                   </div>
 
                   <h4>{project.title}</h4>
-                  {getRepoLabel(project.repoUrl) && <p className="project-repo">{getRepoLabel(project.repoUrl)}</p>}
-                  <p className="project-description">{project.description || "Open-source project available on my GitHub profile."}</p>
+                  {getRepoLabel(project.repoUrl) && (
+                    <p className="project-repo">
+                      {getRepoLabel(project.repoUrl)}
+                    </p>
+                  )}
+                  <p className="project-description">
+                    {project.description ||
+                      "Open-source project available on my GitHub profile."}
+                  </p>
 
                   {project.stack?.length > 0 && (
                     <div className="skills-wrap compact">
@@ -614,25 +701,39 @@ function App() {
                   <div className="project-footer">
                     <div className="project-links">
                       {isHttpLink(project.liveUrl) && (
-                        <a className="project-link" href={project.liveUrl} target="_blank" rel="noreferrer">
+                        <a
+                          className="project-link"
+                          href={project.liveUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
                           Live Demo
                         </a>
                       )}
                       {isHttpLink(project.repoUrl) && (
-                        <a className="project-link" href={project.repoUrl} target="_blank" rel="noreferrer">
+                        <a
+                          className="project-link"
+                          href={project.repoUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
                           Source
                         </a>
                       )}
                     </div>
 
                     {formatUpdatedAt(project.updatedAt) && (
-                      <p className="project-updated">Updated {formatUpdatedAt(project.updatedAt)}</p>
+                      <p className="project-updated">
+                        Updated {formatUpdatedAt(project.updatedAt)}
+                      </p>
                     )}
                   </div>
                 </article>
               ))
             ) : (
-              <p>Add your first project through the API and it will appear here.</p>
+              <p>
+                Add your first project through the API and it will appear here.
+              </p>
             )}
           </div>
         </section>
@@ -686,13 +787,19 @@ function App() {
               />
             </label>
 
-            <button type="submit" className="btn btn-solid send-btn" disabled={messageStatus === "sending"}>
+            <button
+              type="submit"
+              className="btn btn-solid send-btn"
+              disabled={messageStatus === "sending"}
+            >
               {messageStatus === "sending" ? "Sending..." : "Send Message"}
             </button>
           </form>
 
           {messageFeedback && (
-            <p className={`message-feedback ${messageStatus === "error" ? "is-error" : "is-success"}`}>
+            <p
+              className={`message-feedback ${messageStatus === "error" ? "is-error" : "is-success"}`}
+            >
               {messageFeedback}
             </p>
           )}
@@ -712,7 +819,10 @@ function App() {
               <span>{primaryPhone}</span>
             </a>
 
-            <div className="contact-item contact-item-static" aria-label="Address">
+            <div
+              className="contact-item contact-item-static"
+              aria-label="Address"
+            >
               <span className="icon-badge" aria-hidden="true">
                 AD
               </span>
