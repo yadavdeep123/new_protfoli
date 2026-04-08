@@ -11,17 +11,45 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 const clientUrl = process.env.CLIENT_URL;
 
-if (clientUrl) {
-  const origins = clientUrl.split(",").map((origin) => origin.trim());
-  app.use(
-    cors({
-      origin: origins,
-      credentials: true
-    })
-  );
-} else {
-  app.use(cors());
-}
+const configuredOrigins = new Set(
+  (clientUrl || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+);
+
+const isAllowedOrigin = (origin) => {
+  if (!origin) {
+    return true;
+  }
+
+  if (configuredOrigins.has(origin)) {
+    return true;
+  }
+
+  if (/^https?:\/\/localhost(?::\d+)?$/i.test(origin)) {
+    return true;
+  }
+
+  if (/^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin)) {
+    return true;
+  }
+
+  return false;
+};
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (isAllowedOrigin(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true
+  })
+);
 
 app.use(express.json({ limit: "1mb" }));
 
