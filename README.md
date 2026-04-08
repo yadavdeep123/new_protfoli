@@ -84,7 +84,7 @@ npm run seed --prefix server
 npm run dev
 ```
 
-The frontend reads social links from API data (`social.github`, `social.linkedin`, `social.twitter`).
+The frontend reads social links from API data (`social.github`, `social.linkedin`).
 
 Photo update options:
 

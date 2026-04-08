@@ -35,6 +35,7 @@ const normalizeLinkedinUrl = (value) => {
 const normalizeSocialLinks = (social = {}) => ({
   ...social,
   linkedin: normalizeLinkedinUrl(social.linkedin),
+  twitter: "",
 });
 
 const normalizeProjectLinks = (projects = []) => {
@@ -217,7 +218,7 @@ const fallbackPortfolio = {
   social: {
     github: "https://github.com/yadavdeep123",
     linkedin: "https://www.linkedin.com/in/deepakyadav045/",
-    twitter: "https://x.com/yadav__000__045",
+    twitter: "",
   },
   projects: [
     {
@@ -295,7 +296,6 @@ function App() {
       label: "LinkedIn",
       toneClass: "social-platform-linkedin",
     },
-    { key: "twitter", label: "X", toneClass: "social-platform-twitter" },
   ]
     .map((link) => ({
       ...link,

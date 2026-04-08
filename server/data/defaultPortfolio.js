@@ -30,7 +30,7 @@ const defaultPortfolio = {
   social: {
     github: "https://github.com/yadavdeep123",
     linkedin: "https://www.linkedin.com/in/deepakyadav045/",
-    twitter: "https://x.com/yadav__000__045",
+    twitter: "",
   },
   projects: [
     {
