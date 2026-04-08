@@ -10,7 +10,6 @@ const defaultPortfolio = {
   location: "Bihar, India",
   website: "https://deepakyadav.dev",
   profileImage: "/profile-photo.jpeg",
-  resumeUrl: "/Deepak-Yadav-Resume.txt",
   skills: [
     "MongoDB",
     "Express.js",

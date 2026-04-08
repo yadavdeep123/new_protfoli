@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { jsPDF } from "jspdf";
 import { fetchPortfolio } from "./api/portfolioApi";
 import { sendMessage } from "./api/messageApi";
 
@@ -65,131 +64,6 @@ const normalizeProjectLinks = (projects = []) => {
       liveUrl: BODMAS_BEAT_LIVE_URL,
     };
   });
-};
-
-const downloadResumePdf = (portfolio, projects) => {
-  const doc = new jsPDF({ unit: "pt", format: "a4" });
-  const margin = 42;
-  const top = 52;
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const maxWidth = pageWidth - margin * 2;
-  const lineHeight = 15;
-  let y = top;
-
-  const ensureSpace = (required = lineHeight) => {
-    if (y + required > pageHeight - margin) {
-      doc.addPage();
-      y = top;
-    }
-  };
-
-  const writeText = (
-    text,
-    size = 11,
-    weight = "normal",
-    color = [31, 43, 43],
-  ) => {
-    if (!text) {
-      return;
-    }
-
-    doc.setFont("helvetica", weight);
-    doc.setFontSize(size);
-    doc.setTextColor(...color);
-
-    const lines = doc.splitTextToSize(String(text), maxWidth);
-    lines.forEach((line) => {
-      ensureSpace();
-      doc.text(line, margin, y);
-      y += lineHeight;
-    });
-  };
-
-  const addSection = (title) => {
-    ensureSpace(24);
-    y += 4;
-    writeText(title, 12, "bold", [21, 111, 103]);
-    y += 2;
-  };
-
-  const safeName = (portfolio.name || "Deepak Yadav").trim();
-  const safeRole = (portfolio.role || "MERN Stack Developer").trim();
-  const safeEmail = (portfolio.email || "").trim();
-  const safePhone = (portfolio.phone || "").trim();
-  const safeLocation = (portfolio.location || "").trim();
-  const safeWebsite = isHttpLink(portfolio.website) ? portfolio.website : "";
-  const safeGithub = isHttpLink(portfolio.social?.github)
-    ? portfolio.social.github
-    : "";
-  const safeLinkedin = isHttpLink(portfolio.social?.linkedin)
-    ? normalizeLinkedinUrl(portfolio.social.linkedin)
-    : UPDATED_LINKEDIN_URL;
-  const safeAbout = (portfolio.about || portfolio.headline || "").trim();
-  const safeSkills = Array.isArray(portfolio.skills)
-    ? portfolio.skills.filter(Boolean).join(", ")
-    : "";
-
-  writeText(safeName, 24, "bold", [22, 36, 34]);
-  writeText(safeRole, 13, "normal", [63, 87, 82]);
-  y += 4;
-
-  const contactLine = [safeEmail, safePhone, safeLocation]
-    .filter(Boolean)
-    .join(" | ");
-  writeText(contactLine, 10, "normal", [64, 76, 78]);
-
-  const profileLinks = [safeWebsite, safeGithub, safeLinkedin]
-    .filter(Boolean)
-    .join(" | ");
-  writeText(profileLinks, 10, "normal", [64, 76, 78]);
-
-  addSection("Summary");
-  writeText(safeAbout, 11, "normal", [31, 43, 43]);
-
-  addSection("Skills");
-  writeText(
-    safeSkills || "MERN, React, Node.js, Express, MongoDB",
-    11,
-    "normal",
-    [31, 43, 43],
-  );
-
-  addSection("Projects");
-  const safeProjects = Array.isArray(projects) ? projects.filter(Boolean) : [];
-
-  if (!safeProjects.length) {
-    writeText("Projects will be updated soon.", 11, "normal", [31, 43, 43]);
-  } else {
-    safeProjects.slice(0, 6).forEach((project, index) => {
-      const title = project.title || `Project ${index + 1}`;
-      writeText(`${index + 1}. ${title}`, 11, "bold", [22, 36, 34]);
-
-      if (project.description) {
-        writeText(project.description, 10, "normal", [63, 87, 82]);
-      }
-
-      const projectLinks = [
-        isHttpLink(project.liveUrl) ? `Live: ${project.liveUrl}` : "",
-        isHttpLink(project.repoUrl) ? `Code: ${project.repoUrl}` : "",
-      ]
-        .filter(Boolean)
-        .join(" | ");
-
-      if (projectLinks) {
-        writeText(projectLinks, 9, "normal", [70, 82, 84]);
-      }
-
-      y += 4;
-    });
-  }
-
-  const fileNameSlug =
-    safeName
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "") || "resume";
-  doc.save(`${fileNameSlug}-resume.pdf`);
 };
 
 const SocialIcon = ({ platform }) => {
@@ -303,7 +177,6 @@ const fallbackPortfolio = {
   location: "Bihar, India",
   website: "https://deepakyadav.dev",
   profileImage: "/profile-photo.jpeg",
-  resumeUrl: "/Deepak-Yadav-Resume.txt",
   skills: [
     "MongoDB",
     "Express",
@@ -386,7 +259,6 @@ function App() {
   const primaryEmail = portfolio.email || "yadavdeepak6959@gmail.com";
   const primaryPhone = portfolio.phone || "8709583627";
   const primaryLocation = portfolio.location || "Bihar, India";
-  const resumeUrl = portfolio.resumeUrl || "/Deepak-Yadav-Resume.txt";
   const profileInitials = getInitials(portfolio.name);
   const normalizedProjects = normalizeProjectLinks(portfolio.projects);
 
@@ -473,16 +345,6 @@ function App() {
     }
   };
 
-  const handleDownloadResumePdf = () => {
-    downloadResumePdf(
-      {
-        ...portfolio,
-        social: normalizedSocial,
-      },
-      normalizedProjects,
-    );
-  };
-
   return (
     <div className="site-shell">
       <div className="light-orb light-orb-one" aria-hidden="true" />
@@ -517,16 +379,6 @@ function App() {
               <a className="btn btn-solid" href={`mailto:${primaryEmail}`}>
                 Let&apos;s Work Together
               </a>
-              <a className="btn btn-outline" href={resumeUrl} download>
-                Download Resume File
-              </a>
-              <button
-                type="button"
-                className="btn btn-outline"
-                onClick={handleDownloadResumePdf}
-              >
-                Download Resume PDF
-              </button>
               {isHttpLink(normalizedSocial.github) && (
                 <a
                   className="btn btn-outline"
