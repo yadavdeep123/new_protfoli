@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 720" role="img" aria-labelledby="title desc">
+  <title id="title">Profile Placeholder</title>
+  <desc id="desc">Stylized placeholder image for portfolio profile photo.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f17f45"/>
+      <stop offset="100%" stop-color="#156f67"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.35"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="720" height="720" rx="80" fill="url(#bg)"/>
+  <rect x="42" y="42" width="636" height="636" rx="66" fill="none" stroke="url(#ring)" stroke-width="10"/>
+
+  <circle cx="360" cy="274" r="116" fill="#fef8ef" fill-opacity="0.96"/>
+  <path d="M140 612c32-116 124-192 220-192s188 76 220 192" fill="#fef8ef" fill-opacity="0.96"/>
+
+  <text x="360" y="682" font-size="34" text-anchor="middle" fill="#fef8ef" font-family="'Space Mono', monospace" letter-spacing="3">
+    ADD YOUR PHOTO
+  </text>
+</svg>
