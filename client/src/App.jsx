@@ -4,6 +4,8 @@ import { sendMessage } from "./api/messageApi";
 
 const isHttpLink = (value) =>
   typeof value === "string" && /^https?:\/\//i.test(value);
+const isPathLink = (value) => typeof value === "string" && value.startsWith("/");
+const DEFAULT_RESUME_URL = "/Deepak-Yadav-Resume.pdf";
 const THEME_STORAGE_KEY = "portfolio-theme";
 const UPDATED_LINKEDIN_URL = "https://www.linkedin.com/in/deepakyadav045/";
 const BODMAS_BEAT_LIVE_URL = "https://bodmasbeat.netlify.app/";
@@ -64,6 +66,28 @@ const normalizeProjectLinks = (projects = []) => {
       liveUrl: BODMAS_BEAT_LIVE_URL,
     };
   });
+};
+
+const normalizeResumeUrl = (value) => {
+  if (typeof value !== "string") {
+    return DEFAULT_RESUME_URL;
+  }
+
+  const trimmedValue = value.trim();
+
+  if (!trimmedValue) {
+    return DEFAULT_RESUME_URL;
+  }
+
+  if (trimmedValue.toLowerCase().endsWith(".txt")) {
+    return DEFAULT_RESUME_URL;
+  }
+
+  if (isHttpLink(trimmedValue) || isPathLink(trimmedValue)) {
+    return trimmedValue;
+  }
+
+  return DEFAULT_RESUME_URL;
 };
 
 const SocialIcon = ({ platform }) => {
@@ -177,6 +201,7 @@ const fallbackPortfolio = {
   location: "Bihar, India",
   website: "https://deepakyadav.dev",
   profileImage: "/profile-photo.jpeg",
+  resumeUrl: "/Deepak-Yadav-Resume.pdf",
   skills: [
     "MongoDB",
     "Express",
@@ -259,6 +284,7 @@ function App() {
   const primaryEmail = portfolio.email || "yadavdeepak6959@gmail.com";
   const primaryPhone = portfolio.phone || "8709583627";
   const primaryLocation = portfolio.location || "Bihar, India";
+  const resumeUrl = normalizeResumeUrl(portfolio.resumeUrl);
   const profileInitials = getInitials(portfolio.name);
   const normalizedProjects = normalizeProjectLinks(portfolio.projects);
 
@@ -378,6 +404,9 @@ function App() {
             <div className="hero-actions">
               <a className="btn btn-solid" href={`mailto:${primaryEmail}`}>
                 Let&apos;s Work Together
+              </a>
+              <a className="btn btn-outline" href={resumeUrl} download>
+                Download Resume
               </a>
               {isHttpLink(normalizedSocial.github) && (
                 <a
