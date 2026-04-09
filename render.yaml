@@ -13,6 +13,14 @@ services:
         sync: false
       - key: CLIENT_URL
         sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_PHONE_NUMBER
+        sync: false
+      - key: SMS_TO
+        sync: false
 
   - type: static
     name: mern-portfolio-web

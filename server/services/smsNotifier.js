@@ -1,10 +1,60 @@
 import twilio from "twilio";
 
+const readEnv = (...keys) => {
+  for (const key of keys) {
+    const value = process.env[key];
+
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+
+  return "";
+};
+
+const normalizePhoneNumber = (value) => {
+  const raw = (value || "").toString().trim();
+
+  if (!raw) {
+    return "";
+  }
+
+  if (raw.startsWith("+")) {
+    return `+${raw.slice(1).replace(/\D/g, "")}`;
+  }
+
+  const digitsOnly = raw.replace(/\D/g, "");
+
+  if (/^\d{10}$/.test(digitsOnly)) {
+    return `+91${digitsOnly}`;
+  }
+
+  if (/^\d{11,15}$/.test(digitsOnly)) {
+    return `+${digitsOnly}`;
+  }
+
+  return raw;
+};
+
 const getSmsConfig = () => ({
-  accountSid: process.env.TWILIO_ACCOUNT_SID,
-  authToken: process.env.TWILIO_AUTH_TOKEN,
-  fromNumber: process.env.TWILIO_PHONE_NUMBER,
-  toNumber: process.env.SMS_TO,
+  accountSid: readEnv(
+    "TWILIO_ACCOUNT_SID",
+    "TWILIO_SID",
+    "SMS_ACCOUNT_SID",
+  ),
+  authToken: readEnv(
+    "TWILIO_AUTH_TOKEN",
+    "TWILIO_TOKEN",
+    "SMS_AUTH_TOKEN",
+  ),
+  fromNumber: normalizePhoneNumber(readEnv(
+    "TWILIO_PHONE_NUMBER",
+    "TWILIO_FROM_NUMBER",
+    "SMS_FROM",
+  )),
+  toNumber: normalizePhoneNumber(
+    readEnv("SMS_TO", "TWILIO_TO_NUMBER", "SMS_TO_NUMBER"),
+  ),
 });
 
 const hasPlaceholderSmsCredentials = (config) => {

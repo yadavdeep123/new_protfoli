@@ -21,6 +21,14 @@ const storeFallbackMessage = (payload) => {
   return fallbackId;
 };
 
+const getNotificationStatus = (result) => {
+  if (result.status === "fulfilled") {
+    return result.value.sent ? "sent" : result.value.reason || "skipped";
+  }
+
+  return "failed";
+};
+
 export const createMessage = async (req, res) => {
   const name = sanitize(req.body?.name);
   const email = sanitize(req.body?.email);
@@ -94,39 +102,46 @@ export const createMessage = async (req, res) => {
       }
     }
 
-    try {
-      const emailResult = await sendContactNotification(payload);
-      notifications.email = emailResult.sent
-        ? "sent"
-        : emailResult.reason || "skipped";
+    const [emailResult, smsResult] = await Promise.allSettled([
+      sendContactNotification(payload),
+      sendContactSmsNotification(payload),
+    ]);
 
-      if (!emailResult.sent && emailResult.reason === "not-configured") {
-        console.warn(
-          "SMTP is not configured. Skipping email notification for contact message.",
-        );
-      }
-    } catch (emailError) {
-      notifications.email = "failed";
-      console.error(
-        "Failed to send contact notification email:",
-        emailError.message,
+    notifications.email = getNotificationStatus(emailResult);
+    notifications.sms = getNotificationStatus(smsResult);
+
+    if (
+      emailResult.status === "fulfilled" &&
+      !emailResult.value.sent &&
+      emailResult.value.reason === "not-configured"
+    ) {
+      console.warn(
+        "SMTP is not configured. Skipping email notification for contact message.",
       );
     }
 
-    try {
-      const smsResult = await sendContactSmsNotification(payload);
-      notifications.sms = smsResult.sent
-        ? "sent"
-        : smsResult.reason || "skipped";
+    if (
+      smsResult.status === "fulfilled" &&
+      !smsResult.value.sent &&
+      smsResult.value.reason === "not-configured"
+    ) {
+      console.warn(
+        "SMS is not configured. Skipping mobile notification for contact message.",
+      );
+    }
 
-      if (!smsResult.sent && smsResult.reason === "not-configured") {
-        console.warn(
-          "SMS is not configured. Skipping mobile notification for contact message.",
-        );
-      }
-    } catch (smsError) {
-      notifications.sms = "failed";
-      console.error("Failed to send SMS notification:", smsError.message);
+    if (emailResult.status === "rejected") {
+      console.error(
+        "Failed to send contact notification email:",
+        emailResult.reason?.message || emailResult.reason,
+      );
+    }
+
+    if (smsResult.status === "rejected") {
+      console.error(
+        "Failed to send SMS notification:",
+        smsResult.reason?.message || smsResult.reason,
+      );
     }
 
     return res.status(responseStatus).json({

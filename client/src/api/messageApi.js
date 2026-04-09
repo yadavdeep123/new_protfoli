@@ -1,9 +1,20 @@
 import axios from "axios";
 
-const PRODUCTION_API_FALLBACK = "https://server-nu-lime-87.vercel.app";
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+
+  if (import.meta.env.DEV) {
+    return "http://localhost:5001";
+  }
+
+  return "";
+};
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || PRODUCTION_API_FALLBACK
+  baseURL: getApiBaseUrl(),
+  timeout: 10000
 });
 
 export const sendMessage = async (payload) => {
