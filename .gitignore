@@ -4,3 +4,5 @@ build/
 .env
 server/.env
 client/.env
+.vercel
+.env*.local
